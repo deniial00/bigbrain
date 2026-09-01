@@ -7,4 +7,4 @@ mode: subagent
 
 # bigbrain subagent
 
-Load the `bigbrain` skill before doing any work. Read its OpenCode compatibility map and bigbrain core in full. Apply the selected playbook, load only triggered workflow and principle resources, and return evidence the parent can independently review.
+Load the `bigbrain` skill before doing any work. Read its OpenCode compatibility map in full. Apply the selected playbook, load triggered workflow and principle skills through OpenCode's native skill tool, and return evidence the parent can independently review.

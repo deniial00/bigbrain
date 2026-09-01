@@ -7,7 +7,7 @@ The bundled bigbrain resources come from the Cursor plugin. Preserve their engin
 | Upstream wording | OpenCode behavior |
 | --- | --- |
 | Legacy mode or slash invocation | The already-loaded `bigbrain` skill. No slash command or sticky mode is required. |
-| Invoke a named bigbrain skill | Read `references/skills/<name>/SKILL.md` on demand and follow it. |
+| Invoke a named bigbrain skill | Load the named native OpenCode skill with the `skill` tool and follow it. |
 | `Task` or dispatch an agent | Use OpenCode's native task/subagent mechanism. Use the bundled `bigbrain` subagent for implementation delegates that must inherit the full method. |
 | `generalPurpose` | Use OpenCode's `general` subagent. Use `explore` for read-only repository exploration and `scout` for external source research. |
 | `run_in_background: true` | Run independent tasks concurrently when the available task tool supports it. Otherwise run them sequentially without changing the review or verification bar. |
@@ -15,7 +15,7 @@ The bundled bigbrain resources come from the Cursor plugin. Preserve their engin
 | todolist / `TodoWrite` | Use OpenCode's native todo tool. Copy the selected playbook steps without silently dropping any. |
 | Cursor model slug or `model:` argument | Never pass an unverified Cursor slug. Inherit OpenCode's configured model by default. Respect native per-agent model configuration when present. |
 | Cursor MCP discovery | Inspect the tools available in the current OpenCode session. Do not assume a connector exists. |
-| `.cursor/skills` | `.opencode/skills` for project-local installation or `~/.config/opencode/skills` for global installation. |
+| `.cursor/skills` | `.opencode/skills` for project-local installation or `~/.config/opencode/skills` for global installation. Every bundled workflow and principle is a direct native skill. |
 | Cursor rules | `AGENTS.md` or OpenCode's `instructions` configuration. |
 
 ## Built-ins and companion plugins

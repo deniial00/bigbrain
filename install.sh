@@ -58,9 +58,9 @@ else
   copy_files=true
 fi
 
-skill_source=$script_dir/.opencode/skills/bigbrain
+skills_source=$script_dir/.opencode/skills
 agent_source=$script_dir/.opencode/agents
-skill_target=$config_root/skills/bigbrain
+skills_target_root=$config_root/skills
 bigbrain_agent_target=$config_root/agents/bigbrain.md
 comment_agent_target=$config_root/agents/comment-sicko.md
 start_marker='<!-- bigbrain:start -->'
@@ -94,8 +94,16 @@ remove_managed_path() {
   local kind=$2
   [[ -e $target || -L $target ]] || return 0
   if [[ -L $target ]]; then
-    rm "$target"
-    return 0
+    if [[ $kind == skill && -f $target/.bigbrain-managed ]]; then
+      rm "$target"
+      return 0
+    fi
+    if [[ $kind == agent && -f $target ]] && grep -q 'bigbrain-managed' "$target"; then
+      rm "$target"
+      return 0
+    fi
+    printf 'Refusing to remove unmanaged symlink: %s\n' "$target" >&2
+    exit 1
   fi
   if [[ $kind == skill && -f $target/.bigbrain-managed ]]; then
     rm -rf -- "$target"
@@ -109,6 +117,30 @@ remove_managed_path() {
   exit 1
 }
 
+check_tree_target() {
+  local target=$1
+  [[ -e $target || -L $target ]] || return 0
+  if [[ $copy_files == true ]]; then
+    [[ ! -L $target && -f $target/.bigbrain-managed ]] && return 0
+  else
+    [[ -L $target && -f $target/.bigbrain-managed ]] && return 0
+  fi
+  printf 'Refusing to replace unmanaged directory: %s\n' "$target" >&2
+  exit 1
+}
+
+check_agent_target() {
+  local target=$1
+  [[ -e $target || -L $target ]] || return 0
+  if [[ $copy_files == true ]]; then
+    [[ ! -L $target && -f $target ]] && grep -q 'bigbrain-managed' "$target" && return 0
+  else
+    [[ -L $target && -f $target ]] && grep -q 'bigbrain-managed' "$target" && return 0
+  fi
+  printf 'Refusing to replace unmanaged agent: %s\n' "$target" >&2
+  exit 1
+}
+
 install_tree() {
   local source=$1
   local target=$2
@@ -117,6 +149,9 @@ install_tree() {
     if [[ -e $target && ! -f $target/.bigbrain-managed ]]; then
       printf 'Refusing to replace unmanaged directory: %s\n' "$target" >&2
       exit 1
+    fi
+    if [[ -e $target ]]; then
+      rm -rf -- "$target"
     fi
     mkdir -p "$target"
     cp -R "$source/." "$target/"
@@ -149,7 +184,12 @@ install_agent() {
 }
 
 if [[ $uninstall == true ]]; then
-  remove_managed_path "$skill_target" skill
+  if [[ -d $skills_target_root ]]; then
+    for skill_target in "$skills_target_root"/*; do
+      [[ -f $skill_target/.bigbrain-managed ]] || continue
+      remove_managed_path "$skill_target" skill
+    done
+  fi
   remove_managed_path "$bigbrain_agent_target" agent
   remove_managed_path "$comment_agent_target" agent
   remove_bootstrap "$instructions_file"
@@ -157,7 +197,17 @@ if [[ $uninstall == true ]]; then
   exit 0
 fi
 
-install_tree "$skill_source" "$skill_target"
+for skill_source in "$skills_source"/*; do
+  [[ -d $skill_source ]] || continue
+  check_tree_target "$skills_target_root/$(basename -- "$skill_source")"
+done
+check_agent_target "$bigbrain_agent_target"
+check_agent_target "$comment_agent_target"
+
+for skill_source in "$skills_source"/*; do
+  [[ -d $skill_source ]] || continue
+  install_tree "$skill_source" "$skills_target_root/$(basename -- "$skill_source")"
+done
 install_agent "$agent_source/bigbrain.md" "$bigbrain_agent_target"
 install_agent "$agent_source/comment-sicko.md" "$comment_agent_target"
 install_bootstrap "$instructions_file"

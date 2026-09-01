@@ -31,17 +31,29 @@ The installer refuses to overwrite or remove an existing skill or agent it did n
 | Layer | OpenCode mechanism | Loaded when |
 | --- | --- | --- |
 | Activation | A small managed block in global or project `AGENTS.md` | Every session |
-| Router | `.opencode/skills/bigbrain/SKILL.md` | Non-trivial engineering tasks |
-| Core | Adapted pstack router as the internal `bigbrain-core` resource | After the router matches |
+| Router | Native `bigbrain` skill | Non-trivial engineering tasks |
 | Playbook | One of 23 original playbooks | After task classification |
-| Workflows and principles | Original internal skill resources | Only when their triggers apply |
+| Workflows and principles | 43 additional native OpenCode skills | Only when their triggers apply |
 | Delegation | Native `bigbrain` and `comment-sicko` subagents | When a playbook delegates or reviews comments |
 
-Only `bigbrain` is exposed through OpenCode's skill discovery. The other 44 skills and 21 principle leaves stay inside its resource tree. This avoids putting every skill description in the tool context while preserving direct, on-demand access.
+All 44 pstack-derived skills are direct entries under `.opencode/skills/`, matching the upstream plugin structure. OpenCode exposes only each skill's name and description during discovery. It loads the full `SKILL.md` body on demand through the native skill tool. The 21 principle leaves and workflow bodies therefore remain progressively disclosed while every skill can also be invoked directly.
 
 No custom plugin or orchestrator is installed. [OpenCode already provides on-demand Agent Skills](https://opencode.ai/docs/skills/), [global and project instructions](https://opencode.ai/docs/rules/), and [native subagents](https://opencode.ai/docs/agents/). Those mechanisms cover the port cleanly.
 
 OpenCode controls model selection. The bundled agents inherit the configured model by default. You can pin a native `provider/model` through OpenCode's normal agent configuration; the port never injects Cursor model slugs.
+
+## Inspect loaded skills
+
+Run `/details` in the OpenCode TUI to show tool executions. A skill was loaded only when a `skill` tool call with its name appears. Presence in the available-skills list means the skill was discovered, not loaded.
+
+For a previous session, list and export it as JSON, then inspect its `skill` tool calls:
+
+```bash
+opencode session list
+opencode export <session-id> > session.json
+```
+
+See [OpenCode's TUI commands](https://opencode.ai/docs/tui/) and [CLI session export](https://opencode.ai/docs/cli/).
 
 ## Verify
 
@@ -49,7 +61,7 @@ OpenCode controls model selection. The bundled agents inherit the configured mod
 ./scripts/validate.sh
 ```
 
-The validation checks discovery boundaries, upstream resource counts, agent frontmatter, idempotent installation, project installation, and uninstall safety.
+The validation checks all native skill frontmatter and discovery paths, upstream resource counts, agent frontmatter, idempotent installation, project installation, and uninstall safety.
 
 ## Upstream and scope
 
